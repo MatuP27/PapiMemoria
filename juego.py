@@ -11,9 +11,10 @@ import numpy as np
 def conexionBD(consulta, parametros=()):
     with sqlite3.connect("papiMemoria.db") as conexion:
         posicion = conexion.cursor()
-        resultadoCon = posicion.execute(consulta, parametros)
+        posicion.execute(consulta, parametros)
+        resultado = posicion.fetchall()
         conexion.commit()
-        return resultadoCon
+        return resultado
 
 class login:
     def __init__(self):
@@ -35,13 +36,6 @@ class login:
         self.error_label = tk.Label(self.ventana, text="")
         self.error_label.pack()
     
-    def conexionBD(consulta, parametros=()):
-        with sqlite3.connect("papiMemoria.db") as conexion:
-            posicion = conexion.cursor()
-            resultadoCon = posicion.execute(consulta, parametros)
-            # No necesitas hacer commit para consultas de selección
-            return resultadoCon
-
     def verifyUser(self):
         user = self.user.get()
         password = self.password.get()
@@ -68,6 +62,11 @@ class Menu:
         
 
     def __init__(self):
+        self.numerosClickeados = []
+
+        self.paresAcertados = []
+        self.paresTotales = 0
+
         self.ventana_menu = tk.Tk()
         self.ventana_menu.title("Menú")
         self.ventana_matriz = None  # Inicializa la variable para la matriz
@@ -88,15 +87,17 @@ class Menu:
         self.opcion3_button.pack(pady=5)
 
         # Cargar las imágenes
-        self.imagenes = [PhotoImage(file=f"nariz.png").subsample(5) for i in range(1, 10)]
+        self.imagen = PhotoImage(file=f"nariz.png").subsample(5)
+
+        self.imagenesNumeros = []
+        for i in range(0, 25):
+            self.imagenesNumeros.append(PhotoImage(file=f"img/{i}.png").subsample(5))
+        
 
     def crear_ventana_matriz(self, filas, columnas, minute, second):
         self.ventana_matriz = tk.Toplevel(self.ventana_menu)
         self.ventana_matriz.title(f"Matriz {filas}x{columnas}")
         
-        
-
-
         # Use of Entry class to take input from the user
 
         self.minuteEntry= tk.Label(self.ventana_matriz, textvariable=minute)
@@ -111,10 +112,8 @@ class Menu:
         for i in range(filas):
             fila_botones = []
             for j in range(columnas):
-                # Seleccionar una imagen aleatoria
-                imagen = random.choice(self.imagenes)
                 # Crear botón con la función correspondiente
-                boton = tk.Button(self.ventana_matriz, image=imagen, padx=2, pady=2, borderwidth=2, relief="solid", command=lambda i=i, j=j: self.clic_matriz(i, j))
+                boton = tk.Button(self.ventana_matriz, image=self.imagen, padx=2, pady=2, borderwidth=2, relief="solid", command=lambda i=i, j=j: self.clic_matriz(i, j))
                 boton.grid(row=i, column=j)
                 fila_botones.append(boton)
             self.botones_matriz.append(fila_botones)
@@ -162,15 +161,13 @@ class Menu:
             # by one
             temp -= 1
 
-    def __generar_matriz(self, filas, columnas):
-        self.ventana_matriz = tk.Toplevel(self.ventana_menu)
-        self.ventana_matriz.title(f"Matriz {filas}x{columnas}")
-
-        # Asegúrate de que el total de elementos sea filas * columnas
-        total_elementos = filas * columnas
+    def generar_matriz(self, filas, columnas):
+        # Se determina la cantidad de elementos y reinicia los pares acertados.
+        self.paresTotales = filas * columnas
+        self.paresAcertados.clear()
 
         # Crea una matriz con duplicados
-        matriz = np.arange(total_elementos)
+        matriz = np.arange(self.paresTotales)
         matriz_duplicada = np.tile(matriz, 2)
 
         # Mezcla los elementos en la matriz
@@ -181,35 +178,100 @@ class Menu:
 
 
     def crear_ventana_matriz(self, filas, columnas):
+        self.ventana_matriz = tk.Toplevel(self.ventana_menu)
+        self.ventana_matriz.title(f"Matriz {filas}x{columnas*2}")
+
         self.botones_matriz = []  # Reinicia la lista de botones
-        matriz_resultante = self.__generar_matriz(filas, columnas)
+        matriz_resultante = self.generar_matriz(filas, columnas)
         
+        # MOSTRAR NUMEROS
         for i, fila in enumerate(matriz_resultante):
             fila_botones = []
             for j, numero in enumerate(fila):
-                # Seleccionar una imagen aleatoria
-                imagen = random.choice(self.imagenes)
                 # Crear botón con la función correspondiente
-                boton = tk.Button(self.ventana_matriz, image=imagen, padx=2, pady=2, borderwidth=2, relief="solid", command=lambda i=i, j=j, numero=numero: self.clic_matriz(i, j, numero))
+                boton = tk.Button(self.ventana_matriz, image=self.imagenesNumeros[numero], padx=2, pady=2, borderwidth=2, relief="solid", command=lambda i=i, j=j, numero=numero: self.clic_matriz(i, j, numero))
                 boton.grid(row=i, column=j)
                 fila_botones.append(boton)
 
-                print(numero) # este es el numero que se encontraria dentro del boton
+            self.botones_matriz.append(fila_botones)
+
+        self.ventana_menu.after(2000, self.ocultarTodasLasFichas, fila_botones, matriz_resultante)        
+
+        print(matriz_resultante)
+    
+    def ocultarTodasLasFichas(self, fila_botones, matriz_resultante):
+        # Destruir los botones existentes en la matriz
+        for fila_botones in self.botones_matriz:
+            for boton in fila_botones:
+                boton.destroy()
+
+        # Limpiar la lista de botones
+        self.botones_matriz.clear()
+
+        for i, fila in enumerate(matriz_resultante):
+            fila_botones = []
+            for j, numero in enumerate(fila):
+                # Crear botón con la función correspondiente
+                boton = tk.Button(self.ventana_matriz, image=self.imagen, padx=2, pady=2, borderwidth=2, relief="solid", command=lambda i=i, j=j, numero=numero: self.clic_matriz(i, j, numero))
+                boton.grid(row=i, column=j)
+                fila_botones.append(boton)
 
             self.botones_matriz.append(fila_botones)
 
-        print(matriz_resultante)
 
-    def clic_matriz(self, i, j, numero):
-        print(f"Has clic en la posición ({i}, {j}), con elemento: {numero}")
-        # Seleccionar una imagen aleatoria
-        imagen = random.choice(self.imagenes)
-        # Configurar la imagen del botón en la posición seleccionada
-        self.botones_matriz[i][j].config(image=imagen)
+    def mostrarFicha(self, fila, columna, numero):
+        # Obtener el botón correspondiente en la matriz
+        boton = self.botones_matriz[fila][columna]
+
+        # Configurar la imagen como None y establecer el texto
+        boton.config(image=self.imagenesNumeros[numero])
+    
+    def ocultarFicha(self, fila, columna):
+        # Obtener el botón correspondiente en la matriz
+        boton = self.botones_matriz[fila][columna]
+
+        # Configurar la imagen como None y establecer el texto
+        boton.config(image=self.imagen)
+
+
+    def clic_matriz(self, fila, columna, numero):
+        if (len(self.numerosClickeados) < 2):
+            boxPosicion = {'fila': fila, 'columna': columna, 'valor': numero}
+            self.numerosClickeados.append(boxPosicion)
+
+            self.mostrarFicha(fila, columna, numero)
+            
+            # TEMPORAL
+            print(f"Has clic en la posición ({fila}, {columna}), con elemento: {numero}")
+
+            if (len(self.numerosClickeados) == 2):
+                seleccionUno = self.numerosClickeados[0]
+                seleccionDos = self.numerosClickeados[1]
+
+                if (seleccionUno['valor'] == seleccionDos['valor'] and (seleccionUno['fila'] != seleccionDos['fila'] or seleccionUno['columna'] != seleccionDos['columna'])):
+                    # TEMPORAL
+                    print(f"Bien")
+                    self.paresAcertados.append(seleccionUno['valor'])
+                    print(len(self.paresAcertados))
+                    print(self.paresTotales)
+                    if (len(self.paresAcertados) >= (self.paresTotales-2)):
+                        print(f"Ganaste")
+
+                else:
+                    # TEMPORAL
+                    print(f"mal")
+
+                    # time.sleep(2)
+
+                    self.ocultarFicha(seleccionUno['fila'], seleccionUno['columna'])
+                    self.ocultarFicha(seleccionDos['fila'], seleccionDos['columna'])
+
+                self.numerosClickeados.clear()
+
 
     def opcion1(self):
         print("Has elegido la Opción 1")
-        filas, columnas = 3, 4
+        filas, columnas = 3, 3
         self.crear_ventana_matriz(filas, columnas)
 
     def opcion2(self):
@@ -219,7 +281,7 @@ class Menu:
 
     def opcion3(self):
         print("Has elegido la Opción 3")
-        filas, columnas = 4, 5
+        filas, columnas = 5, 5
         self.crear_ventana_matriz(filas, columnas)
 
     def run(self):
