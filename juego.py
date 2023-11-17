@@ -87,24 +87,18 @@ class Menu:
         self.opcion3_button.pack(pady=5)
 
         # Cargar las imágenes
-        self.imagen = PhotoImage(file=f"nariz.png").subsample(5)
+        self.imagen = PhotoImage(file=f"nariz.png").subsample(10)
 
         self.imagenesNumeros = []
         for i in range(0, 25):
-            self.imagenesNumeros.append(PhotoImage(file=f"img/{i}.png").subsample(5))
+            self.imagenesNumeros.append(PhotoImage(file=f"img/{i}.png").subsample(10))
         
 
-    def crear_ventana_matriz(self, filas, columnas, minute, second):
+    def crear_ventana_matriz(self, filas, columnas):
         self.ventana_matriz = tk.Toplevel(self.ventana_menu)
         self.ventana_matriz.title(f"Matriz {filas}x{columnas}")
         
         # Use of Entry class to take input from the user
-
-        self.minuteEntry= tk.Label(self.ventana_matriz, textvariable=minute)
-        self.minuteEntry.place(x=130,y=20)
-
-        self.secondEntry= tk.Label(self.ventana_matriz, textvariable=second)
-        self.secondEntry.place(x=180,y=20)
 
 
         self.botones_matriz = []  # Reinicia la lista de botones
@@ -177,9 +171,17 @@ class Menu:
         # Da forma a la matriz con las dimensiones correctas
         return matriz_duplicada.reshape(filas, -1)
 
-    def crear_ventana_matriz(self, filas, columnas):
+    def crear_ventana_matriz(self, filas, columnas, minute, second):
+        self.ventana_menu.withdraw()
         self.ventana_matriz = tk.Toplevel(self.ventana_menu)
         self.ventana_matriz.title(f"Matriz {filas}x{columnas*2}")
+
+        self.minuteEntry= tk.Label(self.ventana_matriz, textvariable=minute)
+        self.minuteEntry.place(x=130,y=20)
+
+        self.secondEntry= tk.Label(self.ventana_matriz, textvariable=second)
+        self.secondEntry.place(x=180,y=20)
+
 
         self.botones_matriz = []  # Reinicia la lista de botones
         matriz_resultante = self.generar_matriz(filas, columnas)
@@ -218,7 +220,7 @@ class Menu:
 
             self.botones_matriz.append(fila_botones)
 
-        # INCIALIZAR CRONOMETRO ROMY
+        # INCIALIZAR TEMPORIZADOR ROMY
 
 
     def mostrarFicha(self, fila, columna, numero):
@@ -256,11 +258,13 @@ class Menu:
 
                         self.paresAcertados.append(seleccionUno['valor'])
 
-                        if (len(self.paresAcertados) >= (self.paresTotales-2)):
+                        if (len(self.paresAcertados) >= (self.paresTotales)):
                             # CERRAR PANTALLA MATRIZ ROMY
-
                             # TEMPORAL
+                            print(self.paresAcertados,self.paresTotales)
                             print(f"Ganaste")
+                            self.ventana_matriz.destroy()
+                            self.ventana_menu.deiconify()
 
                         self.numerosClickeados.clear()
 
@@ -290,7 +294,11 @@ class Menu:
     def opcion3(self):
         print("Has elegido la Opción 3")
         filas, columnas = 5, 5
-        self.crear_ventana_matriz(filas, columnas)
+        
+        minute = tk.StringVar()
+        second = tk.StringVar()
+        self.crear_ventana_matriz(filas, columnas, minute, second)
+
 
     def run(self):
         self.ventana_menu.mainloop()
