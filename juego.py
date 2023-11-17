@@ -77,13 +77,13 @@ class Menu:
         self.label_instruccion.pack(pady=2)
 
         # Botones de opciones
-        self.opcion1_button = tk.Button(self.ventana_menu, text="Opción 1", command=self.opcion1)
+        self.opcion1_button = tk.Button(self.ventana_menu, text="Chico", command=self.opcion1)
         self.opcion1_button.pack(pady=5)
 
-        self.opcion2_button = tk.Button(self.ventana_menu, text="Opción 2", command=self.opcion2)
+        self.opcion2_button = tk.Button(self.ventana_menu, text="Mediano", command=self.opcion2)
         self.opcion2_button.pack(pady=5)
 
-        self.opcion3_button = tk.Button(self.ventana_menu, text="Opción 3", command=self.opcion3)
+        self.opcion3_button = tk.Button(self.ventana_menu, text="Pinocho (grande)", command=self.opcion3)
         self.opcion3_button.pack(pady=5)
 
         # Cargar las imágenes
@@ -161,6 +161,7 @@ class Menu:
             # by one
             temp -= 1
 
+
     def generar_matriz(self, filas, columnas):
         # Se determina la cantidad de elementos y reinicia los pares acertados.
         self.paresTotales = filas * columnas
@@ -176,7 +177,6 @@ class Menu:
         # Da forma a la matriz con las dimensiones correctas
         return matriz_duplicada.reshape(filas, -1)
 
-
     def crear_ventana_matriz(self, filas, columnas):
         self.ventana_matriz = tk.Toplevel(self.ventana_menu)
         self.ventana_matriz.title(f"Matriz {filas}x{columnas*2}")
@@ -189,7 +189,7 @@ class Menu:
             fila_botones = []
             for j, numero in enumerate(fila):
                 # Crear botón con la función correspondiente
-                boton = tk.Button(self.ventana_matriz, image=self.imagenesNumeros[numero], padx=2, pady=2, borderwidth=2, relief="solid", command=lambda i=i, j=j, numero=numero: self.clic_matriz(i, j, numero))
+                boton = tk.Button(self.ventana_matriz, image=self.imagenesNumeros[numero], padx=2, pady=2, borderwidth=2, relief="solid")
                 boton.grid(row=i, column=j)
                 fila_botones.append(boton)
 
@@ -218,6 +218,8 @@ class Menu:
 
             self.botones_matriz.append(fila_botones)
 
+        # INCIALIZAR CRONOMETRO ROMY
+
 
     def mostrarFicha(self, fila, columna, numero):
         # Obtener el botón correspondiente en la matriz
@@ -233,40 +235,43 @@ class Menu:
         # Configurar la imagen como None y establecer el texto
         boton.config(image=self.imagen)
 
-
     def clic_matriz(self, fila, columna, numero):
-        if (len(self.numerosClickeados) < 2):
-            boxPosicion = {'fila': fila, 'columna': columna, 'valor': numero}
-            self.numerosClickeados.append(boxPosicion)
+        if numero not in self.paresAcertados:
+            if (len(self.numerosClickeados) < 2):
+                boxPosicion = {'fila': fila, 'columna': columna, 'valor': numero}
+                self.numerosClickeados.append(boxPosicion)
 
-            self.mostrarFicha(fila, columna, numero)
-            
-            # TEMPORAL
-            print(f"Has clic en la posición ({fila}, {columna}), con elemento: {numero}")
+                self.mostrarFicha(fila, columna, numero)
+                
+                # TEMPORAL
+                print(f"Has clic en la posición ({fila}, {columna}), con elemento: {numero}")
 
-            if (len(self.numerosClickeados) == 2):
-                seleccionUno = self.numerosClickeados[0]
-                seleccionDos = self.numerosClickeados[1]
+                if (len(self.numerosClickeados) == 2):
+                    seleccionUno = self.numerosClickeados[0]
+                    seleccionDos = self.numerosClickeados[1]
 
-                if (seleccionUno['valor'] == seleccionDos['valor'] and (seleccionUno['fila'] != seleccionDos['fila'] or seleccionUno['columna'] != seleccionDos['columna'])):
-                    # TEMPORAL
-                    print(f"Bien")
-                    self.paresAcertados.append(seleccionUno['valor'])
-                    print(len(self.paresAcertados))
-                    print(self.paresTotales)
-                    if (len(self.paresAcertados) >= (self.paresTotales-2)):
-                        print(f"Ganaste")
+                    if (seleccionUno['valor'] == seleccionDos['valor'] and (seleccionUno['fila'] != seleccionDos['fila'] or seleccionUno['columna'] != seleccionDos['columna'])):
+                        # TEMPORAL
+                        print(f"Bien")
+                        self.paresAcertados.append(seleccionUno['valor'])
+                        print(len(self.paresAcertados))
+                        print(self.paresTotales)
+                        if (len(self.paresAcertados) >= (self.paresTotales-2)):
+                            # CERRAR PANTALLA MATRIZ ROMY
 
-                else:
-                    # TEMPORAL
-                    print(f"mal")
+                            # TEMPORAL
+                            print(f"Ganaste")
 
-                    # time.sleep(2)
+                    else:
+                        # TEMPORAL
+                        print(f"mal")
 
-                    self.ocultarFicha(seleccionUno['fila'], seleccionUno['columna'])
-                    self.ocultarFicha(seleccionDos['fila'], seleccionDos['columna'])
+                        # time.sleep(2)
 
-                self.numerosClickeados.clear()
+                        self.ocultarFicha(seleccionUno['fila'], seleccionUno['columna'])
+                        self.ocultarFicha(seleccionDos['fila'], seleccionDos['columna'])
+
+                    self.numerosClickeados.clear()
 
 
     def opcion1(self):
