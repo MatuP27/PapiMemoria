@@ -253,25 +253,28 @@ class Menu:
                     if (seleccionUno['valor'] == seleccionDos['valor'] and (seleccionUno['fila'] != seleccionDos['fila'] or seleccionUno['columna'] != seleccionDos['columna'])):
                         # TEMPORAL
                         print(f"Bien")
+
                         self.paresAcertados.append(seleccionUno['valor'])
-                        print(len(self.paresAcertados))
-                        print(self.paresTotales)
+
                         if (len(self.paresAcertados) >= (self.paresTotales-2)):
                             # CERRAR PANTALLA MATRIZ ROMY
 
                             # TEMPORAL
                             print(f"Ganaste")
 
+                        self.numerosClickeados.clear()
+
                     else:
                         # TEMPORAL
                         print(f"mal")
 
-                        # time.sleep(2)
-
                         self.ocultarFicha(seleccionUno['fila'], seleccionUno['columna'])
-                        self.ocultarFicha(seleccionDos['fila'], seleccionDos['columna'])
+                        # self.ocultarFicha(seleccionDos['fila'], seleccionDos['columna'])
 
-                    self.numerosClickeados.clear()
+                        self.numerosClickeados.clear()
+                        self.numerosClickeados.append(boxPosicion)
+                        print(self.numerosClickeados)
+
 
 
     def opcion1(self):
