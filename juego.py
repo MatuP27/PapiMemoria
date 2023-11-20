@@ -67,6 +67,7 @@ class Menu:
         self.paresAcertados = []
         self.paresTotales = 0
 
+
         self.ventana_menu = tk.Tk()
         self.ventana_menu.title("Menú")
         self.ventana_matriz = None  # Inicializa la variable para la matriz
@@ -113,47 +114,24 @@ class Menu:
             self.botones_matriz.append(fila_botones)
     
     
-    def submit(self, hour, minute, second):
+    def submit(self, minute, second, temp):
         try:
-            # the input provided by the user is
-            # stored in here :temp
-            temp = int(hour.get())*3600 + int(minute.get())*60 + int(second.get())
-        except:
-            print("Please input the right value")
-        while temp >-1:
-            
-            # divmod(firstvalue = temp//60, secondvalue = temp%60)
-            mins,secs = divmod(temp,60) 
+            while temp > -1:
+                mins, secs = divmod(temp, 60)
+                minute.set("{:02d}".format(mins))
+                second.set("{:02d}".format(secs))
+                self.ventana_matriz.update()
+                time.sleep(1)
 
-            # Converting the input entered in mins or secs to hours,
-            # mins ,secs(input = 110 min --> 120*60 = 6600 => 1hr :
-            # 50min: 0sec)
-            hours=0
-            if mins >60:
-                
-                # divmod(firstvalue = temp//60, secondvalue 
-                # = temp%60)
-                hours, mins = divmod(mins, 60)
-            
-            # using format () method to store the value up to 
-            # two decimal places
-            hour.set("{0:2d}".format(hours))
-            minute.set("{0:2d}".format(mins))
-            second.set("{0:2d}".format(secs))
+                if temp == 0:
+                    messagebox.showinfo("Temporizador", "El tiempo se ha acabado")
+                    self.ventana_matriz.destroy()
+                    self.ventana_menu.deiconify()
 
-            # updating the GUI window after decrementing the
-            # temp value every time
-            self.ventana_matriz.update()
-            time.sleep(1)
+                temp -= 1
+        except Exception as e:
+            print("Error in submit:", e)
 
-            # when temp value = 0; then a messagebox pop's up
-            # with a message:"Time's up"
-            if (temp == 0):
-                messagebox.showinfo("Time Countdown", "Time's up ")
-            
-            # after every one sec the value of temp will be decremented
-            # by one
-            temp -= 1
 
 
     def generar_matriz(self, filas, columnas):
@@ -176,11 +154,14 @@ class Menu:
         self.ventana_matriz = tk.Toplevel(self.ventana_menu)
         self.ventana_matriz.title(f"Matriz {filas}x{columnas*2}")
 
-        self.minuteEntry= tk.Label(self.ventana_matriz, textvariable=minute)
-        self.minuteEntry.place(x=130,y=20)
+        marco_temporizador = tk.Frame(self.ventana_matriz)
+        marco_temporizador.grid(row=filas, column=0, columnspan=columnas*2)
 
-        self.secondEntry= tk.Label(self.ventana_matriz, textvariable=second)
-        self.secondEntry.place(x=180,y=20)
+        self.minuteEntry = tk.Label(marco_temporizador, textvariable=minute)
+        self.minuteEntry.grid(row=0, column=0, padx=10)
+
+        self.secondEntry = tk.Label(marco_temporizador, textvariable=second)
+        self.secondEntry.grid(row=0, column=1, padx=10)
 
 
         self.botones_matriz = []  # Reinicia la lista de botones
@@ -283,21 +264,32 @@ class Menu:
 
     def opcion1(self):
         print("Has elegido la Opción 1")
+        minute = tk.StringVar()
+        second = tk.StringVar()
         filas, columnas = 3, 3
-        self.crear_ventana_matriz(filas, columnas)
+        self.crear_ventana_matriz(filas, columnas, minute, second)
 
     def opcion2(self):
         print("Has elegido la Opción 2")
+        minute = tk.StringVar()
+        second = tk.StringVar()
         filas, columnas = 4, 4
-        self.crear_ventana_matriz(filas, columnas)
+        self.crear_ventana_matriz(filas, columnas, minute, second)
 
     def opcion3(self):
         print("Has elegido la Opción 3")
         filas, columnas = 5, 5
-        
         minute = tk.StringVar()
         second = tk.StringVar()
+        minute.set("00")
+        second.set("05")
+
         self.crear_ventana_matriz(filas, columnas, minute, second)
+
+        # Crear un temporizador y comenzar la cuenta regresiva
+        temp = int(minute.get()) * 60 + int(second.get())
+        self.ventana_menu.after(2000, lambda: self.submit(minute, second, temp))
+
 
 
     def run(self):
