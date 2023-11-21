@@ -33,8 +33,13 @@ class login:
         self.login_button = tk.Button(self.ventana, text="Login", command=self.verifyUser)
         self.login_button.pack()
 
+        self.register_button = tk.Button(self.ventana, text="Registrarse", command=self.abrirRegistro)
+        self.register_button.pack()
+
         self.error_label = tk.Label(self.ventana, text="")
         self.error_label.pack()
+
+        self.ventana.mainloop()
     
     def verifyUser(self):
         user = self.user.get()
@@ -47,21 +52,94 @@ class login:
 
             if resultQuery:
                 result = 'Acceso concedido.'
+
+                self.ventana.destroy()
+
+                menu = Menu(user)
+                menu.run()
+                
             else:
                 result = 'Credenciales incorrectas.'
         else:
             result = 'No se han obtenido los datos necesarios.'
 
         self.error_label.config(text=result)
+    
+    def abrirRegistro(self):
+        self.ventana.withdraw()
+        registro(self.ventana)
 
 
+class registro:
+    def __init__(self, ventanaLogin):
+        self.ventanaLogin = ventanaLogin
 
+        self.ventana = tk.Tk()
+        self.ventana.title("Registro")
+                
+        self.label_instruccion = tk.Label(self.ventana, text="Papi Memoria")
+        self.label_instruccion.pack()
+
+        self.user = tk.Entry(self.ventana)
+        self.user.pack()
+
+        self.password1 = tk.Entry(self.ventana, show="*")
+        self.password1.pack()
+
+        self.password2 = tk.Entry(self.ventana, show="*")
+        self.password2.pack()
+
+        self.login_button = tk.Button(self.ventana, text="Crear", command=self.createUser)
+        self.login_button.pack()
+
+        self.error_label = tk.Label(self.ventana, text="")
+        self.error_label.pack()
+
+        self.ventana.mainloop()
+    
+    def createUser(self):
+        user = self.user.get()
+        password1 = self.password1.get()
+        password2 = self.password2.get()
+
+        if (len(password1) > 0 and len(password2) > 0 and len(user) > 0):
+            query = "SELECT * FROM user WHERE nickname = ?"
+            parameters = (user,)
+            resultQuery = conexionBD(query, parameters)
+
+            if resultQuery:
+                result = 'El usuario ingresado ya existe.'
+            else:
+                if (password1 == password2):
+                    query = "INSERT INTO user(nickname, password) VALUES(?, ?)"
+                    parameters = (user, password1)
+                    conexionBD(query, parameters)
+
+                    query = "SELECT * FROM user WHERE nickname = ? AND password = ?"
+                    parameters = (user, password1)
+                    resultQueryConfirmation = conexionBD(query, parameters)
+
+                    if resultQueryConfirmation:
+                        result = 'Usuario creado correctamente.'
+                        self.ventanaLogin.deiconify()
+                        self.ventana.destroy()
+                    else:
+                        result = 'No se pudo crear su usuario.'
+
+                else:
+                    result = 'Las contraseñas no coinciden.'
+        else:
+            result = 'No se han obtenido los datos necesarios.'
+        
+        self.error_label.config(text=result)
 
 
 class Menu:
         
 
-    def __init__(self):
+    def __init__(self, nickname):
+        self.nickname = nickname
+
         self.numerosClickeados = []
 
         self.paresAcertados = []
@@ -86,6 +164,9 @@ class Menu:
 
         self.opcion3_button = tk.Button(self.ventana_menu, text="Pinocho (grande)", command=self.opcion3)
         self.opcion3_button.pack(pady=5)
+        
+        self.score_button = tk.Button(self.ventana_menu, text="Score", command=score)
+        self.score_button.pack(pady=15)
 
         # Cargar las imágenes
         self.imagen = PhotoImage(file=f"nariz.png").subsample(10)
@@ -98,9 +179,6 @@ class Menu:
     def crear_ventana_matriz(self, filas, columnas):
         self.ventana_matriz = tk.Toplevel(self.ventana_menu)
         self.ventana_matriz.title(f"Matriz {filas}x{columnas}")
-        
-        # Use of Entry class to take input from the user
-
 
         self.botones_matriz = []  # Reinicia la lista de botones
 
@@ -181,6 +259,7 @@ class Menu:
         self.ventana_menu.after(2000, self.ocultarTodasLasFichas, fila_botones, matriz_resultante)        
 
         print(matriz_resultante)
+        
     
     def ocultarTodasLasFichas(self, fila_botones, matriz_resultante):
         # Destruir los botones existentes en la matriz
@@ -236,7 +315,7 @@ class Menu:
                     if (seleccionUno['valor'] == seleccionDos['valor'] and (seleccionUno['fila'] != seleccionDos['fila'] or seleccionUno['columna'] != seleccionDos['columna'])):
                         # TEMPORAL
                         print(f"Bien")
-
+                        
                         self.paresAcertados.append(seleccionUno['valor'])
 
                         if (len(self.paresAcertados) >= (self.paresTotales)):
@@ -244,6 +323,8 @@ class Menu:
                             # TEMPORAL
                             print(self.paresAcertados,self.paresTotales)
                             print(f"Ganaste")
+                            self.agrearTiempoDelUsuario()
+
                             self.ventana_matriz.destroy()
                             self.ventana_menu.deiconify()
 
@@ -260,7 +341,15 @@ class Menu:
                         self.numerosClickeados.append(boxPosicion)
                         print(self.numerosClickeados)
 
+    def agrearTiempoDelUsuario(self):
+        tiempoRestante = (int(self.minuteEntry.cget("text")) * 60) + int(self.secondEntry.cget("text"))
+        tiempoDisponible = 5 * 60
+        tiempoTardado = tiempoDisponible - tiempoRestante
 
+        query = "INSERT INTO ranking(nickname, time) VALUES(?, ?)"
+        parameters = (self.nickname, tiempoTardado)
+
+        conexionBD(query, parameters)
 
     def opcion1(self):
         print("Has elegido la Opción 1")
@@ -281,8 +370,8 @@ class Menu:
         filas, columnas = 5, 5
         minute = tk.StringVar()
         second = tk.StringVar()
-        minute.set("00")
-        second.set("05")
+        minute.set("05")
+        second.set("00")
 
         self.crear_ventana_matriz(filas, columnas, minute, second)
 
@@ -295,24 +384,52 @@ class Menu:
     def run(self):
         self.ventana_menu.mainloop()
 
-# Ejemplo de uso
-if __name__ == "__main__":
-    menu = Menu()
-    menu.run()
+
+class score:
+    def __init__(self):
+        self.labels_top = []   # Lista labels
 
 
-# # Especifica un rango de números más pequeño para que la cantidad total sea par
-# inicio = 1
-# fin = 32
+        self.ventana = tk.Tk()
+        self.ventana.title("Score")
+                
+        self.label_instruccion = tk.Label(self.ventana, text="TOP 10")
+        self.label_instruccion.pack()
 
-# # Crea una matriz con duplicados
-# matriz = np.arange(inicio, fin + 1)
-# matriz_duplicada = np.tile(matriz, 2)
+        query = "SELECT nickname, time FROM ranking GROUP BY nickname LIMIT 10"
+        resultado = conexionBD(query)
+        
+        for top in resultado:
+            texto = top[0], top[1]
 
-# # Mezcla los elementos en la matriz
-# np.random.shuffle(matriz_duplicada)
+            label = tk.Label(self.ventana, text=texto)
+            label.pack()
 
-# # Da forma a la matriz con cinco filas y dos columnas
-# matriz_5x2 = matriz_duplicada.reshape(8, -1)
 
-# print(matriz_5x2)
+        self.error_label = tk.Label(self.ventana, text="")
+        self.error_label.pack()
+
+        self.ventana.mainloop()
+
+
+    def devolverTopTiempos(self):
+        query = "SELECT nickname, time FROM ranking GROUP BY nickname LIMIT 10"
+        resultado = conexionBD(query)
+        print(resultado)
+        return 
+
+    def mostrarTopTiempos(self):
+        listaTiempos = self.devolverTopTiempos()
+
+        for j in listaTiempos:
+            # Crear botón con la función correspondiente
+            print(j[0])
+        #     top_label = self.error_label = tk.Label(self.ventana, text="")
+        #     self.labels_top.append(top_label)
+        # self.labels_top.append(fila_botones)
+
+
+# s =score()
+# s.mostrarTopTiempos()
+
+login()
