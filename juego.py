@@ -27,7 +27,7 @@ class login:
         self.user = tk.Entry(self.ventana)
         self.user.pack()
 
-        self.password = tk.Entry(self.ventana)
+        self.password = tk.Entry(self.ventana, show="*")
         self.password.pack()
 
         self.login_button = tk.Button(self.ventana, text="Login", command=self.verifyUser)
@@ -280,8 +280,6 @@ class Menu:
 
             self.botones_matriz.append(fila_botones)
 
-        # INCIALIZAR TEMPORIZADOR ROMY
-
 
     def mostrarFicha(self, fila, columna, numero):
         # Obtener el botón correspondiente en la matriz
@@ -319,10 +317,8 @@ class Menu:
                         self.paresAcertados.append(seleccionUno['valor'])
 
                         if (len(self.paresAcertados) >= (self.paresTotales)):
-                            # CERRAR PANTALLA MATRIZ ROMY
                             # TEMPORAL
-                            print(self.paresAcertados,self.paresTotales)
-                            print(f"Ganaste")
+                            print("Ganaste")
                             self.agrearTiempoDelUsuario()
 
                             self.ventana_matriz.destroy()
@@ -335,7 +331,6 @@ class Menu:
                         print(f"mal")
 
                         self.ocultarFicha(seleccionUno['fila'], seleccionUno['columna'])
-                        # self.ocultarFicha(seleccionDos['fila'], seleccionDos['columna'])
 
                         self.numerosClickeados.clear()
                         self.numerosClickeados.append(boxPosicion)
@@ -379,8 +374,6 @@ class Menu:
         temp = int(minute.get()) * 60 + int(second.get())
         self.ventana_menu.after(2000, lambda: self.submit(minute, second, temp))
 
-
-
     def run(self):
         self.ventana_menu.mainloop()
 
@@ -389,14 +382,13 @@ class score:
     def __init__(self):
         self.labels_top = []   # Lista labels
 
-
         self.ventana = tk.Tk()
         self.ventana.title("Score")
                 
         self.label_instruccion = tk.Label(self.ventana, text="TOP 10")
         self.label_instruccion.pack()
 
-        query = "SELECT nickname, time FROM ranking GROUP BY nickname LIMIT 10"
+        query = "SELECT nickname, MIN(time) AS time FROM ranking GROUP BY nickname ORDER BY time ASC LIMIT 10"
         resultado = conexionBD(query)
         
         for top in resultado:
@@ -410,26 +402,5 @@ class score:
         self.error_label.pack()
 
         self.ventana.mainloop()
-
-
-    def devolverTopTiempos(self):
-        query = "SELECT nickname, time FROM ranking GROUP BY nickname LIMIT 10"
-        resultado = conexionBD(query)
-        print(resultado)
-        return 
-
-    def mostrarTopTiempos(self):
-        listaTiempos = self.devolverTopTiempos()
-
-        for j in listaTiempos:
-            # Crear botón con la función correspondiente
-            print(j[0])
-        #     top_label = self.error_label = tk.Label(self.ventana, text="")
-        #     self.labels_top.append(top_label)
-        # self.labels_top.append(fila_botones)
-
-
-# s =score()
-# s.mostrarTopTiempos()
 
 login()
